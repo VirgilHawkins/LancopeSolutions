@@ -7,15 +7,14 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 
-import cm.stealthwatch.problems.Solutions.gnode.GNode;
-import cm.stealthwatch.problems.Solutions.gnode.GNodeImpl;
+import cm.stealthwatch.problems.Solutions.gnode.GraphNode;
 
 
 
 public class GNodeTest {
 	private static final Logger LOGGER = Logger.getLogger( GNodeTest.class.getName());
 
-	GNodeImpl gNodeImpl = new GNodeImpl("A", null);
+	GraphNode gNodeImpl = new GraphNode("A");
 	
 	@Test
 	public void singleNodeTest() {
@@ -25,13 +24,19 @@ public class GNodeTest {
 	
 	@Test
 	public void childrenNodeTest() {
-		GNodeImpl gNodeE = new GNodeImpl("E", null);
-		GNodeImpl gNodeD = new GNodeImpl("D", null);
-		GNodeImpl gNodeC = new GNodeImpl("C", new GNode[] {gNodeE});
-		GNodeImpl gNodeB = new GNodeImpl("B", new GNode[] {gNodeE});
-		GNodeImpl gNodeA = new GNodeImpl("A", new GNode[] {gNodeC});
+		GraphNode gNodeE = new GraphNode("E");
+		GraphNode gNodeD = new GraphNode("D");
+		GraphNode gNodeC = new GraphNode("C");
+		GraphNode gNodeB = new GraphNode("B");
+		GraphNode gNodeA = new GraphNode("A");
 		
-		LOGGER.info(GNodeImpl.walkGraph(gNodeA).toString());
+
+		gNodeA.addChild(gNodeD);
+		gNodeD.addChild(new GraphNode("Z"));
+		gNodeD.addChild(gNodeC);
+		gNodeA.addChild(gNodeB);
+		
+		LOGGER.info(GraphNode.walkGraph(gNodeA).toString());
 		
 		
 	}
