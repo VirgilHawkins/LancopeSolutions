@@ -18,6 +18,9 @@ public class WordCounterTest {
 		assertEquals(450, map.size());
 	}
 	
+	/**
+	*Wrote the next two test to check for timings for handling larger set of data.
+	*/
 	@Test
 	public void test75KBFile() {
 		Map<String, Integer> map = WordCounter.getWordsByCountInAFile("src\\\\test\\\\resources\\\\gutenburg.txt");
