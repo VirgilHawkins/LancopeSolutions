@@ -82,9 +82,12 @@ public class GraphNode implements GNode {
 	public static ArrayList<ArrayList<String>> printPaths(GNode node) {
 		List<ArrayList<String>> paths = new ArrayList<ArrayList<String>>();
 		ArrayList<String> currentPath = new ArrayList<String>();
-		Deque<GNode> queue = new LinkedList<>();
-		Set<GNode> visited = new HashSet<>();
-		GNode lastHadChildren = node;
+		List<String> continuePath = new ArrayList<>();
+		Deque<GNode> childQueue = new LinkedList<>();
+		Deque<GNode> parentQueue = new LinkedList<>();
+		Set<GNode> visited = new LinkedHashSet<>();
+		Set<GNode> extracted = new LinkedHashSet<>();
+		
 		
 		//for returning a single node
 		//originally returned an empty list for single points since
@@ -92,70 +95,97 @@ public class GraphNode implements GNode {
 		/*
 		 * I was thinking in terms of a network since they can have a single point...
 		 */
-		if(node.getChildren().length == 0) {
-			currentPath.add(node.getName());
-			paths.add(currentPath);
-		} else {
-			queue.addAll(Arrays.asList(node.getChildren()));
-			currentPath.add(node.getName());
-		}
-		
-		while(!queue.isEmpty()) {
-			if(visited.contains(queue.getLast())) {
-				queue.removeLast();
-				currentPath = new ArrayList<String>();
-				currentPath.add(node.getName());
+		parentQueue.add(node);
+		while(!parentQueue.isEmpty()) {
+			if(nodesAreVisited(parentQueue.getLast(), visited)) {
+				visited.add(parentQueue.getLast());
+				currentPath.remove(parentQueue.getLast().getName());
+				parentQueue.removeLast();
+				continue;
+			} 
+			
+			if(parentQueue.getLast().getChildren().length > 0 && !extracted.contains(parentQueue.getLast())) {
+				childQueue.addAll(Arrays.asList(parentQueue.getLast().getChildren()));
+				currentPath.add(parentQueue.getLast().getName());
+			} else if (parentQueue.getLast().getChildren().length == 0){
+				currentPath.add(parentQueue.getLast().getName());
+				paths.add(currentPath);
+				parentQueue.removeLast();
+				continue;
+			}
+			
+			if(nodesAreVisited(parentQueue.getLast(), visited)) {
+				
+			}
+			
+			if(childQueue.getLast().getChildren().length > 0) {
+				parentQueue.addLast(childQueue.removeLast());
+				continue;
 			} else {
-
-				
-				if(queue.peekLast().getChildren().length > 0) {
-					lastHadChildren = queue.peekLast();
-					currentPath.add(lastHadChildren.getName());	
-					queue.addAll(Arrays.asList(lastHadChildren.getChildren()));
-					continue;
-				} else {
-					if(!currentPath.contains(lastHadChildren.getName()))
-						currentPath.add(lastHadChildren.getName());
-					currentPath.add(queue.peekLast().getName());
-					visited.add(queue.peekLast());
+				while(childQueue.getLast().getChildren().length == 0) {
+					currentPath.add(childQueue.getLast().getName());
+					visited.add(childQueue.getLast());
 					paths.add(currentPath);
+					currentPath = new ArrayList<>(currentPath);
+					currentPath.remove(childQueue.getLast().getName());
+					childQueue.removeLast();
+					if(childQueue.getLast().getChildren().length > 0) {
+						parentQueue.addLast(childQueue.removeLast());
+						break;
+					}
+					if(visited.containsAll(Arrays.asList(parentQueue.getLast().getChildren()))) {
+						currentPath.remove(parentQueue.getLast().getName());
+						visited.add(parentQueue.removeLast());
+						break;
+					}
 				}
-				
-				if(visited.containsAll(Arrays.asList(lastHadChildren.getChildren()))) {
-					queue.removeAll(Arrays.asList(lastHadChildren.getChildren()));
-					visited.add(lastHadChildren);
-				}
-
 			}
 			
 		}
 		
 		return (ArrayList<ArrayList<String>>) paths;
 	}
+	
+	private static boolean nodesAreVisited(GNode node, Set<GNode> visited) {
+		return visited.containsAll(Arrays.asList(node.getChildren()));
+	}
 
 	public static void main(String args[]) {
-		GraphNode gNodeD = new GraphNode("D");
-		GraphNode gNodeC = new GraphNode("C");
-		GraphNode gNodeB = new GraphNode("B");
-		GraphNode gNodeA = new GraphNode("A");
-
-		gNodeA.addChild(gNodeB);
-		gNodeB.addChild(new GraphNode("E"));
-		gNodeB.addChild(new GraphNode("F"));
-		gNodeC.addChild(new GraphNode("G"));
-		gNodeC.addChild(new GraphNode("H"));
-		gNodeC.addChild(new GraphNode("I"));
-		gNodeD.addChild(new GraphNode("J"));
-		gNodeA.addChild(gNodeC);
-		gNodeA.addChild(gNodeD);
-
+		GraphNode A = new GraphNode("A");
+		GraphNode B = new GraphNode("B");
+		GraphNode C = new GraphNode("C");
+		GraphNode D = new GraphNode("D");
+		GraphNode E = new GraphNode("E");
+		GraphNode F = new GraphNode("F");
+		GraphNode G = new GraphNode("G");
+		GraphNode H = new GraphNode("H");
+		GraphNode I = new GraphNode("I");
+		GraphNode J = new GraphNode("J");
+		GraphNode K = new GraphNode("K");
+		GraphNode L = new GraphNode("L");
+		GraphNode M = new GraphNode("M");
+		A.addChild(B);
+		A.addChild(C);
+		A.addChild(D);
+		B.addChild(E);
+		B.addChild(F);
+		B.addChild(G);
+		E.addChild(H);
+		E.addChild(I);
+		E.addChild(J);
+		J.addChild(K);
+		K.addChild(L);
+		K.addChild(M);
 		
-		LOGGER.info("Walking a whole graph: "+walkGraph(gNodeA));
-		LOGGER.info("Walking a partial graph: "+walkGraph(gNodeB));
-		LOGGER.info("Single node: "+walkGraph(new GraphNode("Z")));
-		LOGGER.info("Paths of a whole graph: " + printPaths(gNodeA));
-		LOGGER.info("Paths of a part graph: " + printPaths(gNodeC));
-		LOGGER.info("Testing of a single node: "+printPaths(new GraphNode("Z")));
+
+		System.out.println(printPaths(A));
+		
+//		LOGGER.info("Walking a whole graph: "+walkGraph(gNodeA));
+//		LOGGER.info("Walking a partial graph: "+walkGraph(gNodeB));
+//		LOGGER.info("Single node: "+walkGraph(new GraphNode("Z")));
+
+//		LOGGER.info("Paths of a part graph: " + printPaths(gNodeC));
+//		LOGGER.info("Testing of a single node: "+printPaths(new GraphNode("Z")));
 
 	}
 
