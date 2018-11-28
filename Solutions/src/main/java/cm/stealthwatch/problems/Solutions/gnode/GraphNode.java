@@ -26,7 +26,8 @@ public class GraphNode implements GNode {
 	}
 
 	/**
-	 * Easily adds child nodes to a parent node without manually intervening the the GNode array
+	 * Easily adds child nodes to a parent node without manually 
+	 * intervening with the GNode array
 	 * The code was much cleaner this way
 	 * @param gnode
 	 */
@@ -71,10 +72,14 @@ public class GraphNode implements GNode {
 	}
 
 	/**
-	 * Prints all possible paths from a given node
+	 * Prints all possible paths from a given node within a list of string points within an arrayList
 	 * returns a single node if no other nodes present
+	 * for returning a single node originally I returned an
+	 * empty list since I thought that a path was displacement between two or more points
+	 * After reading some definitions on wikipedia I see a path with one point can have an
+	 * infinite distance, so I decided to print the single point
 	 * @param node
-	 * @return
+	 * @return ArrayList<ArrayList<String>> 
 	 */
 	public static ArrayList<ArrayList<String>> printPaths(GNode node) {
 		List<ArrayList<String>> paths = new ArrayList<ArrayList<String>>();
@@ -84,56 +89,46 @@ public class GraphNode implements GNode {
 		Set<GNode> visited = new LinkedHashSet<>();
 		Set<GNode> extracted = new LinkedHashSet<>();
 		
-		
-		//for returning a single node
-		//originally returned an empty list for single points since
-		//their were no paths
-		/*
-		 * I was thinking in terms of a network since they can have a single point...
-		 */
 		parentQueue.add(node);
-		while(!parentQueue.isEmpty()) {
-			while(nodesAreVisited(parentQueue.getLast(), visited)) {
-				visited.add(parentQueue.getLast());
-				currentPath.remove(parentQueue.getLast().getName());
-				parentQueue.removeLast();
-				if(parentQueue.isEmpty())
-					break;
-			} 
+		while(queueHasContent(parentQueue)) {
+			removeParentNodesFromPath(currentPath, parentQueue, visited); 
 			
-			if(parentQueue.isEmpty())
+			if(queueIsEmpty(parentQueue))
 				continue;
 			
-			if(parentQueue.getLast().getChildren().length > 0 && !extracted.contains(parentQueue.getLast())) {
+			if(isNodeAParent(parentQueue.getLast()) && nodesHaveNotBeenExtracted(parentQueue.getLast(), extracted)) {
 				childQueue.addAll(Arrays.asList(parentQueue.getLast().getChildren()));
 				currentPath.add(parentQueue.getLast().getName());
 				extracted.add(parentQueue.getLast());
-			} else if (parentQueue.getLast().getChildren().length == 0){
+			} else if (nodeIsSingle(parentQueue.getLast())) {
 				currentPath.add(parentQueue.getLast().getName());
 				paths.add(currentPath);
 				parentQueue.removeLast();
 				continue;
 			}
 
-			if(childQueue.getLast().getChildren().length > 0) {
+			if(isNodeAParent(childQueue.getLast())) {
 				parentQueue.addLast(childQueue.removeLast());
 				continue;
 			} else {
-				while(childQueue.getLast().getChildren().length == 0) {
+				while(nodeIsSingle(childQueue.getLast())) {
 					currentPath.add(childQueue.getLast().getName());
 					visited.add(childQueue.getLast());
 					paths.add(currentPath);
 					currentPath = new ArrayList<>(currentPath);
 					currentPath.remove(childQueue.getLast().getName());
 					childQueue.removeLast();
-					if(childQueue.isEmpty())
+					
+					if(queueIsEmpty(childQueue))
 						break;
-					if(childQueue.getLast().getChildren().length > 0) {
+					
+					if(isNodeAParent(childQueue.getLast())) {
+						removeParentNodesFromPath(currentPath, parentQueue, visited); 
 						parentQueue.addLast(childQueue.removeLast());
 						break;
 					} 
 					
-					if(visited.containsAll(Arrays.asList(parentQueue.getLast().getChildren()))) {
+					if(nodesHaveBeenVisited(parentQueue.getLast(), visited)) {
 						currentPath.remove(parentQueue.getLast().getName());
 						visited.add(parentQueue.removeLast());
 						break;
@@ -145,9 +140,55 @@ public class GraphNode implements GNode {
 		
 		return (ArrayList<ArrayList<String>>) paths;
 	}
+
+	private static void removeParentNodesFromPath(ArrayList<String> currentPath, Deque<GNode> parentQueue,
+			Set<GNode> visited) {
+		while(nodesHaveBeenVisited(parentQueue.getLast(), visited)) {
+			visited.add(parentQueue.getLast());
+			currentPath.remove(parentQueue.getLast().getName());
+			parentQueue.removeLast();
+			if(queueHasContent(parentQueue)) {
+				continue;
+			} else { 
+				break;
+			}
+		}
+	}
 	
-	private static boolean nodesAreVisited(GNode node, Set<GNode> visited) {
-		return visited.containsAll(Arrays.asList(node.getChildren()));
+	private static boolean nodesHaveBeenVisited(GNode node, Set<GNode> visited) {
+		if(nodeIsSingle(node)) {
+			return false;
+		} else {
+			return visited.containsAll(Arrays.asList(node.getChildren()));
+		}
+	}
+	
+	private static boolean nodeIsSingle(GNode node) {
+		return node.getChildren().length == 0;
+	}
+	
+	private static boolean isNodeAParent(GNode node) {
+		return node.getChildren().length > 0;
+	}
+	
+	
+	private static boolean queueHasContent(Deque<GNode> nodes) {
+		if(nodes.isEmpty())
+			return false;
+		else
+			return true;
+	}
+	
+	private static boolean queueIsEmpty(Deque<GNode> nodes) {
+		return nodes.isEmpty();
+	}
+	
+	private static boolean nodesHaveNotBeenExtracted(GNode node, Set<GNode> extracted) {
+		if(extracted.contains(node)) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 	public static void main(String args[]) {
@@ -180,6 +221,7 @@ public class GraphNode implements GNode {
 
 		System.out.println(walkGraph(gNodeA));
 		System.out.println(printPaths(gNodeA));
+		System.out.println(printPaths(new GraphNode("M")));
 
 	}
 
